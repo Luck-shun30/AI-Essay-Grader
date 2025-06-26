@@ -18,6 +18,22 @@ if 'rubric' not in st.session_state:
     st.session_state.rubric = ""
 if 'extra' not in st.session_state:
     st.session_state.extra = ""
+
+def apply_theme():
+    # Always dark mode, fixed blue accent
+    st.markdown("""
+        <style>
+        body, .stApp { background-color: #18191A !important; color: #f8f9fa !important; }
+        .stButton>button { background: #1f77b4 !important; color: white !important; }
+        .stProgress > div > div > div > div { background-color: #1f77b4 !important; }
+        .stDownloadButton>button { background: #1f77b4 !important; color: white !important; }
+        .stRadio > div { color: #f8f9fa !important; }
+        .stTextInput > div > input { background: #23272F !important; color: #f8f9fa !important; }
+        .stTextArea > div > textarea { background: #23272F !important; color: #f8f9fa !important; }
+        .stSelectbox > div { background: #23272F !important; color: #f8f9fa !important; }
+        </style>
+    """, unsafe_allow_html=True)
+
 def main():
     st.title("AI Essay Grader ✍️")
     st.markdown("""
@@ -26,9 +42,9 @@ def main():
         </div>
     """, unsafe_allow_html=True)
 
-    if not os.getenv('GEMINI_API_KEY'):
-        st.error("GEMINI_API_KEY not found in environment variables. Please add it to your .env file.")
-        st.stop()
+    # Always apply dark mode with blue accent
+    apply_theme()
+
     # Inputs in columns for conciseness
     with st.expander("📝 Essay Input", expanded=True):
         col1, col2 = st.columns(2)
@@ -79,6 +95,20 @@ def main():
         if not essay or not rubric:
             st.error("Please provide both the essay and rubric.")
             return
+        # Progress bar and animation
+        progress_placeholder = st.empty()
+        animation_placeholder = st.empty()
+        import time
+        progress = 0
+        for i in range(10):
+            progress += 10
+            progress_placeholder.progress(progress, text=f"Grading... {progress}%")
+            animation_placeholder.markdown(
+                f"<div style='text-align:center; font-size:2em;'>🧠 <span style='animation: bounce 1s infinite;'>{'.' * ((i % 3) + 1)}</span></div>"
+                "<style>@keyframes bounce {0%, 100% {transform: translateY(0);} 50% {transform: translateY(-10px);}}</style>",
+                unsafe_allow_html=True
+            )
+            time.sleep(0.08)
         with st.spinner("Grading essay with Gemini..."):
             prompt = build_gemini_prompt(essay, rubric, extra)
             try:
@@ -93,6 +123,8 @@ def main():
                     st.text(result)
             except Exception as e:
                 st.error(f"Error: {e}")
+        progress_placeholder.empty()
+        animation_placeholder.empty()
 
     if st.session_state.grading_result:
         grade = st.session_state.grading_result["grade"]
