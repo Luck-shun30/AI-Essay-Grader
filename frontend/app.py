@@ -5,7 +5,7 @@ import streamlit as st
 from dotenv import load_dotenv
 import json
 from backend.gemini_api import build_gemini_prompt, get_gemini_response
-from backend.file_utils import read_uploaded_file
+from backend.file_utils import read_uploaded_file, load_user_settings, save_user_settings
 from backend.clipboard_utils import copy_to_clipboard
 
 load_dotenv()
@@ -18,7 +18,6 @@ if 'rubric' not in st.session_state:
     st.session_state.rubric = ""
 if 'extra' not in st.session_state:
     st.session_state.extra = ""
-
 def main():
     st.title("AI Essay Grader ✍️")
     st.markdown("""
@@ -129,5 +128,38 @@ def main():
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
+def settings_page():
+    import getpass
+    from backend.file_utils import load_user_settings, save_user_settings
+    st.title("User Settings ⚙️")
+    settings_path = os.path.join(os.path.dirname(__file__), '../user_settings.json')
+    settings = load_user_settings(settings_path)
+    
+    name = st.text_input("Your Name", value=settings.get("name", ""))
+    grading_scale = st.selectbox("Preferred Grading Scale", ["A-F", "1-10", "Percentage"], index=["A-F", "1-10", "Percentage"].index(settings.get("grading_scale", "A-F")))
+    default_rubric = st.text_area("Default Rubric (optional)", value=settings.get("default_rubric", ""), height=80)
+    
+    if st.button("Save Settings", type="primary"):
+        new_settings = {
+            "name": name,
+            "grading_scale": grading_scale,
+            "default_rubric": default_rubric
+        }
+        save_user_settings(new_settings, settings_path)
+        st.success("Settings saved!")
+    st.info("Settings are stored locally in user_settings.json.")
+
+# Navigation
+PAGES = {
+    "Essay Grader": main,
+    "User Settings": settings_page
+}
+
+def run():
+    st.sidebar.title("Navigation")
+    selection = st.sidebar.radio("Go to", list(PAGES.keys()))
+    page = PAGES[selection]
+    page()
+
 if __name__ == "__main__":
-    main() 
+    run() 

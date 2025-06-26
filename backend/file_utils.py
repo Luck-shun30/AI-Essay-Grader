@@ -1,6 +1,8 @@
 import PyPDF2
 import io
 from docx import Document
+import json
+import os
 
 def read_uploaded_file(uploaded_file):
     if uploaded_file is None:
@@ -24,4 +26,14 @@ def read_uploaded_file(uploaded_file):
         else:
             return None
     except Exception as e:
-        return None 
+        return None
+
+def load_user_settings(settings_path='user_settings.json'):
+    if not os.path.exists(settings_path):
+        return {}
+    with open(settings_path, 'r') as f:
+        return json.load(f)
+
+def save_user_settings(settings, settings_path='user_settings.json'):
+    with open(settings_path, 'w') as f:
+        json.dump(settings, f, indent=2) 
