@@ -36,4 +36,14 @@ def load_user_settings(settings_path='user_settings.json'):
 
 def save_user_settings(settings, settings_path='user_settings.json'):
     with open(settings_path, 'w') as f:
-        json.dump(settings, f, indent=2) 
+        json.dump(settings, f, indent=2)
+
+def save_grammar_spelling_issues(issues, path='grammar_spelling_issues.json'):
+    with open(path, 'w') as f:
+        json.dump(issues, f, indent=2)
+
+def load_grammar_spelling_issues(path='grammar_spelling_issues.json'):
+    if not os.path.exists(path):
+        return []
+    with open(path, 'r') as f:
+        return json.load(f) 
