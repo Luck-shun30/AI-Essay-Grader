@@ -206,7 +206,7 @@ def main():
                     st.session_state.rubric = rubric
 
     with st.expander("⚙️ Additional Instructions", expanded=False):
-        extra = st.text_area("Extra Grading Instructions (optional)", height=60, 
+        extra = st.text_area("Extra Grading Instructions (optional)", height=68, 
                             placeholder="Any specific grading criteria or instructions...", 
                             value=st.session_state.extra, key="extra_input")
         st.session_state.extra = extra

@@ -3,4 +3,6 @@ google-genai
 python-dotenv
 PyPDF2
 python-docx
-pyperclip 
+pyperclip
+language_tool_python
+toml 
