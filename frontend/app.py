@@ -7,6 +7,7 @@ import json
 from backend.gemini_api import build_gemini_prompt, get_gemini_response
 from backend.file_utils import read_uploaded_file, load_user_settings, save_user_settings
 from backend.clipboard_utils import copy_to_clipboard
+import language_tool_python
 
 load_dotenv()
 
@@ -45,6 +46,15 @@ def main():
     # Always apply dark mode with blue accent
     apply_theme()
 
+    # Target word count input
+    st.sidebar.markdown("### Word Count Settings")
+    target_word_count = st.sidebar.text_input("Target Word Count (optional)", value="")
+    try:
+        target_word_count = int(target_word_count) if target_word_count.strip() else None
+    except ValueError:
+        st.sidebar.error("Target word count must be a number.")
+        target_word_count = None
+
     # Inputs in columns for conciseness
     with st.expander("📝 Essay Input", expanded=True):
         col1, col2 = st.columns(2)
@@ -60,6 +70,45 @@ def main():
                 if uploaded_essay:
                     st.success(f"✅ Uploaded: {uploaded_essay.name}")
                     st.session_state.essay = essay
+
+    # Word count metric and progress bar
+    essay = st.session_state.essay
+    word_count = len(essay.split()) if essay else 0
+    st.markdown(f"**Word Count:** {word_count}")
+    if target_word_count:
+        progress = min(word_count / target_word_count, 1.0)
+        st.progress(progress, text=f"{word_count} / {target_word_count} words")
+        if word_count > target_word_count:
+            st.info(f"You have exceeded the target by {word_count - target_word_count} words.")
+
+    # Grammar and spelling checks
+    if essay:
+        if st.button("Check Grammar & Spelling", key="grammar_check"):
+            try:
+                tool = language_tool_python.LanguageToolPublicAPI('en-US')
+                matches = tool.check(essay)
+                grammar_issues = [m for m in matches if m.ruleIssueType == 'grammar']
+                spelling_issues = [m for m in matches if m.ruleIssueType == 'misspelling']
+                if grammar_issues or spelling_issues:
+                    st.markdown("### 📝 Grammar & Spelling Checks")
+                    if grammar_issues:
+                        st.warning(f"Grammar issues found: {len(grammar_issues)}")
+                        for m in grammar_issues[:5]:
+                            st.markdown(f"- {m.message} (at position {m.offset})")
+                        if len(grammar_issues) > 5:
+                            st.markdown(f"...and {len(grammar_issues) - 5} more.")
+                    if spelling_issues:
+                        st.warning(f"Spelling issues found: {len(spelling_issues)}")
+                        for m in spelling_issues[:5]:
+                            st.markdown(f"- {m.message} (at position {m.offset})")
+                        if len(spelling_issues) > 5:
+                            st.markdown(f"...and {len(spelling_issues) - 5} more.")
+                else:
+                    st.success("No grammar or spelling issues detected!")
+            except language_tool_python.utils.LanguageToolError as e:
+                st.error("Grammar & spelling check service is currently unavailable. Please try again later.")
+            except Exception as e:
+                st.error(f"Unexpected error: {e}")
 
     with st.expander("📋 Rubric Input", expanded=True):
         col1, col2 = st.columns(2)
