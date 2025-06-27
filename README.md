@@ -20,7 +20,7 @@ A modern, customizable web app for grading essays using AI (Google Gemini). Uplo
 
 ### 1. Clone the Repository
 ```bash
-git clone <repo-url>
+git clone https://github.com/Luck-shun30/AI-Essay-Grader
 cd AI-Essay-Grader
 ```
 
